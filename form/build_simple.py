@@ -77,20 +77,20 @@ row(type="select_multiple activity", name="primary_activity",
                 f" and not({STAYHOME} and {EMPLOYED})"
                 f" and not(selected(., 'Unemployed_and_looking_for_work') and {EMPLOYED})"),
     constraint_message="Some of these answers cannot all be true. See the red message below the question.")
-WARN = '<span style="color:#B23A1F">⚠ {}</span>'
+WARN = '⚠️ {}'
 row(type="note", name="warn_mother_father", relevant=f"{MOTHER} and {FATHER}",
-    label=WARN.format("Please choose either the <b>mother</b> options or the <b>father</b> options, not both."))
+    label=WARN.format("Please choose either the **mother** options or the **father** options, not both."))
 row(type="note", name="warn_work_stay", relevant=(f"({SEL('primary_activity','Working_Mother')} and {SEL('primary_activity','Stay_home_mother')}) or "
                                                    f"({SEL('primary_activity','Working_Father')} and {SEL('primary_activity','Stay_home_Father')})"),
-    label=WARN.format("<b>Working</b> parent and <b>stay-home</b> parent cannot both apply. Please keep only one."))
+    label=WARN.format("**Working** parent and **stay-home** parent cannot both apply. Please keep only one."))
 row(type="note", name="warn_stay_employed",
     relevant=(f"({SEL('primary_activity','Stay_home_mother')} or {SEL('primary_activity','Stay_home_Father')}) and "
               f"({SEL('primary_activity','Employed_full-time')} or {SEL('primary_activity','Employed_part-time')} or {SEL('primary_activity','Self-employed_or_running_a_business')})"),
-    label=WARN.format("A <b>stay-home</b> parent is not also employed or self-employed. If you work, choose <b>Working mother/father</b> instead."))
+    label=WARN.format("A **stay-home** parent is not also employed or self-employed. If you work, choose **Working mother/father** instead."))
 row(type="note", name="warn_unemployed",
     relevant=(f"{SEL('primary_activity','Unemployed_and_looking_for_work')} and "
               f"({SEL('primary_activity','Employed_full-time')} or {SEL('primary_activity','Employed_part-time')} or {SEL('primary_activity','Self-employed_or_running_a_business')})"),
-    label=WARN.format("<b>Unemployed</b> cannot be combined with employed or self-employed."))
+    label=WARN.format("**Unemployed** cannot be combined with employed or self-employed."))
 row(type="text", name="primary_activity_other", label="Please specify the other activity.",
     required="yes", relevant="selected(${primary_activity}, 'Other')")
 row(type="calculate", name="parent_role", calculation=f"if({MOTHER} or {FATHER}, '1', '0')")
@@ -105,10 +105,10 @@ row(type="select_multiple circumstance", name="current_circumstances",
                 " and (${parent_role} = '0' or selected(., 'I_am_a_parent'))"),
     constraint_message="Please check your answers: choose only one relationship status; ‘None of these’ cannot be combined with other options; and if you are a mother or father, please also select ‘I am a parent’.")
 row(type="note", name="hint_parent", relevant="${parent_role} = '1' and not(selected(${current_circumstances}, 'I_am_a_parent'))",
-    label='<span style="color:#1F6FB2">ℹ You said you are a mother or father in Q4, so please also select <b>I am a parent</b>.</span>')
+    label='ℹ️ You said you are a mother or father in Q4, so please also select **I am a parent**.')
 row(type="note", name="warn_relationship",
     relevant="(" + " + ".join(f"number(selected(${{current_circumstances}}, '{r}'))" for r in REL) + ") > 1",
-    label=WARN.format("Please choose only <b>one</b> relationship status."))
+    label=WARN.format("Please choose only **one** relationship status."))
 row(type="end_group", name="section_b")
 
 # Section C: statements
@@ -180,7 +180,7 @@ for c in choices:
 one("agree", ["Strongly agree", "Agree", "Disagree", "Strongly disagree", "Not sure"])
 
 settings = [dict(form_title="Knowing and Living the Self: An Anonymous Survey of Adults Aged 18–50",
-                 form_id="knowing_living_self", version="2026112003", style="pages")]
+                 form_id="knowing_living_self", version="2026112004", style="pages")]
 
 wb = Workbook()
 HF = Font(name="Arial", bold=True, color="FFFFFF"); HFILL = PatternFill("solid", start_color="1F4E79")
