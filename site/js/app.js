@@ -22,8 +22,9 @@
   ["#f-from", "#f-to"].forEach((s) => { $(s).min = K.dateMin; $(s).max = K.dateMax; });
 
   const m = K.D.meta;
-  $("#sidebar-foot").innerHTML = `<div><i class="fa-regular fa-file-excel"></i> ${K.esc(m.data_file)}</div>
-    <div><i class="fa-regular fa-clock"></i> Built ${new Date(m.built).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
+  const live = m.source === "kobo";
+  $("#sidebar-foot").innerHTML = `<div class="live-row"><span class="live-dot ${live ? "on" : ""}"></span> ${live ? "Live from KoBoToolbox" : `<i class="fa-regular fa-file-excel"></i> ${K.esc(m.data_file)}`}</div>
+    <div><i class="fa-regular fa-clock"></i> Updated ${new Date(m.built).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
     <div><i class="fa-solid fa-database"></i> ${K.int(m.n_all)} submissions · ${K.int(m.n_valid)} analysed</div>`;
   $("#page-foot").innerHTML = `<span>Knowing and Living the Self · anonymous survey of adults aged 18–50 in Rwanda</span>
     <span>Analysis in R · charts by Plotly · tables by DataTables</span>`;
@@ -96,6 +97,23 @@
   $("#btn-pdf").addEventListener("click", () => { K.toast("Choose ‘Save as PDF’ in the print dialog"); setTimeout(() => window.print(), 400); });
   window.addEventListener("hashchange", () => { readHash(); K.render(); });
   window.addEventListener("beforeprint", () => document.querySelectorAll(".js-plotly-plot").forEach((p) => Plotly.Plots.resize(p)));
+
+  // ---------------------------------------------------------------- live refresh
+  // Every 2 minutes, check whether a newer build has been published; if so, reload
+  // (the URL keeps the current page and filters).
+  if (location.protocol.startsWith("http")) {
+    setInterval(async () => {
+      try {
+        const r = await fetch("data/dashboard.json?t=" + Date.now(), { cache: "no-store" });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (j.meta && j.meta.built && j.meta.built !== K.D.meta.built) {
+          K.toast(`New data: ${K.int(j.meta.n_all)} submissions. Updating…`);
+          setTimeout(() => location.reload(), 2500);
+        }
+      } catch (e) { /* offline: try again next time */ }
+    }, 120000);
+  }
 
   // ---------------------------------------------------------------- start
   try { K.state.labels = localStorage.getItem("klts-labels") === "1"; } catch (e) {}

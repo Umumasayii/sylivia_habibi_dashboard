@@ -8,7 +8,7 @@ code_answer <- function(x) unname(c("Strongly disagree" = 1, "Disagree" = 2, "Ag
 export_dashboard <- function(d, st, data_file, out_dir = "public/data") {
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   act <- attr(d, "activity_matrix"); circ <- attr(d, "circumstance_matrix")
-  ans <- sapply(ITEMS$item, function(q) code_answer(d[[q]]))
+  ans <- if (nrow(d)) sapply(ITEMS$item, function(q) code_answer(d[[q]])) else matrix(numeric(0), 0, nrow(ITEMS))
   if (is.null(dim(ans))) ans <- matrix(ans, nrow = nrow(d))
   colnames(ans) <- ITEMS$item
 
@@ -31,7 +31,8 @@ export_dashboard <- function(d, st, data_file, out_dir = "public/data") {
   payload <- list(
     meta = list(title = "Knowing and Living the Self",
                 subtitle = "An anonymous survey of adults aged 18–50 in Rwanda",
-                data_file = basename(data_file),
+                data_file = if (tolower(tools::file_ext(data_file)) == "json") "KoBoToolbox API (live)" else basename(data_file),
+                source = if (tolower(tools::file_ext(data_file)) == "json") "kobo" else "file",
                 built = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
                 n_all = nrow(d), n_valid = sum(d$eligible)),
     themes = lapply(names(THEMES), function(t) list(key = t, label = THEMES[[t]],

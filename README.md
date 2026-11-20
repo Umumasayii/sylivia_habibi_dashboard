@@ -3,14 +3,46 @@
 An interactive dashboard for the anonymous KoBoToolbox survey of adults aged 18–50 in Rwanda.
 Everything is computed in **R**; the result is a static website in `public/`, which Vercel hosts.
 
-## Update the dashboard with new data
+## Automatic updates from KoBoToolbox
 
-1. In KoBoToolbox go to **Data → Downloads** and export as **XLS** (Labels, or XML values and headers — both work; all form versions are merged).
-2. Replace the file in `data/` with the new export (keep **one** file in that folder; any name ending in `.xlsx`, `.xls` or `.csv` works).
-3. Commit and push to `main`.
+The dashboard updates itself — no Excel uploads needed.
 
-GitHub Actions then runs R, rebuilds `public/`, commits it, and Vercel redeploys — usually within 3–5 minutes.
-You can also start a rebuild by hand: **Actions → Build dashboard → Run workflow**.
+1. Every 30 minutes, GitHub Actions downloads all submissions from the KoBoToolbox API
+   (`scripts/fetch_kobo.sh`, form `aeaBsrZVMuXeKozLyot5v7` on `kf.kobotoolbox.org`).
+2. If anything changed (new, edited or deleted submissions), R rebuilds the dashboard and commits `public/`.
+3. Vercel publishes the new version; open dashboards notice it within 2 minutes and refresh themselves.
+
+Raw submissions are never committed to the repository; only the processed dashboard data is.
+
+### One-time setup
+
+| Where (GitHub → Settings → Secrets and variables → Actions) | Name | Value |
+| --- | --- | --- |
+| **Secrets** | `KOBO_TOKEN` | Your KoBo API key (KoBoToolbox → Account settings → Security → API key) |
+| Variables (optional) | `KOBO_ASSET_UID` | Only to switch forms; defaults to `aeaBsrZVMuXeKozLyot5v7` |
+| Variables (optional) | `KOBO_SERVER` | Only for another server (e.g. `https://eu.kobotoolbox.org`); defaults to `https://kf.kobotoolbox.org` |
+
+Then **Actions → Build dashboard → Run workflow** once to test.
+
+### Optional: update within a minute of each submission
+
+KoBoToolbox can ping GitHub on every new submission:
+
+1. On GitHub create a fine-grained personal access token for this repository only, with **Contents: Read and write**.
+2. In KoBoToolbox open the form → **Settings → REST Services → Register a new service**:
+   - Endpoint URL: `https://api.github.com/repos/Umumasayii/sylivia_habibi_dashboard/dispatches`
+   - Type: JSON
+   - Custom HTTP headers: `Authorization` = `Bearer <your token>`, `Accept` = `application/vnd.github+json`
+   - Custom wrapper around JSON submission: `{"event_type": "kobo_submission", "client_payload": {"submission": %SUBMISSION%}}`
+3. Submit a test response and check **Actions** for a run triggered by `repository_dispatch`.
+
+The 30-minute schedule keeps running either way, so nothing is missed if the ping fails.
+
+### Without the API (fallback)
+
+If `KOBO_TOKEN` is not set, the build uses the newest `.xlsx`/`.xls`/`.csv` export in `data/` instead.
+
+> GitHub pauses scheduled workflows in repositories with no activity for 60 days. If that happens, open **Actions** and re-enable the workflow.
 
 ## What the dashboard shows
 

@@ -67,26 +67,26 @@ AGE_VALID   <- c("18–24", "25–34", "35–44", "45–50")
 # (works for label exports, XML-value exports and both form versions)
 ACTIVITY_OPTS <- c(
   "Studying"                              = "studying",
-  "Employed full-time"                    = "(^|[^f])employed.full",
-  "Employed part-time"                    = "(^|[^f])employed.part",
+  "Employed full-time"                    = "(^|[^f-])employed.f(ull|t)",
+  "Employed part-time"                    = "(^|[^f-])employed.p(art|t)",
   "Self-employed / running a business"    = "self.employed",
   "Unemployed, looking for work"          = "unemployed",
   "Working mother"                        = "working.mother",
   "Stay-at-home mother"                   = "stay.(at.)?home.mother",
   "Working father"                        = "working.father",
   "Stay-at-home father"                   = "stay.(at.)?home.father",
-  "More than one applies equally"         = "more than one",
+  "More than one applies equally"         = "more than one|multiple equal",
   "Other"                                 = "(^|\\s)other"
 )
 CIRCUMSTANCE_OPTS <- c(
-  "Single"                                 = "i am single",
-  "Dating / in a relationship"             = "dating|in a relationship",
-  "Married"                                = "i am married",
-  "Separated, divorced or widowed"         = "separated|divorced|widowed",
-  "Parent"                                 = "i am a parent",
-  "Significant caregiving"                 = "caregiving",
-  "Educational or career transition"       = "educational or career",
-  "Other personal transition"              = "another significant personal",
+  "Single"                                 = "(^|\\s)(i am )?single(\\s|$)",
+  "Dating / in a relationship"             = "dating|(^|\\s)relationship(\\s|$)",
+  "Married"                                = "(^|\\s)(i am )?married(\\s|$)",
+  "Separated, divorced or widowed"         = "separated|divorced|widowed|sep div wid",
+  "Parent"                                 = "(^|\\s)(i am a )?parent(\\s|$)",
+  "Significant caregiving"                 = "caregiv",
+  "Educational or career transition"       = "educational or career|edu career",
+  "Other personal transition"              = "another significant personal|(^|\\s)personal transition",
   "None of these"                          = "none of these"
 )
 

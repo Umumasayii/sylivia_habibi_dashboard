@@ -15,6 +15,7 @@ find_data_file <- function(dir = "data") {
 
 read_any <- function(path) {
   ext <- tolower(tools::file_ext(path))
+  if (ext == "json") return(read_kobo_json(path))
   if (ext %in% c("xlsx", "xls")) {
     raw <- readxl::read_excel(path, sheet = 1, col_types = "text", .name_repair = "minimal")
   } else {
@@ -24,6 +25,19 @@ read_any <- function(path) {
                              name_repair = "minimal", show_col_types = FALSE)
   }
   as.data.frame(raw, check.names = FALSE, stringsAsFactors = FALSE)
+}
+
+# KoBoToolbox API (v2) JSON: a list of submissions, keys like "group/question"
+read_kobo_json <- function(path) {
+  x <- jsonlite::fromJSON(path, simplifyVector = FALSE)
+  if (!is.null(x$results)) x <- x$results
+  keys <- unique(unlist(lapply(x, names)))
+  if (!length(x) || !length(keys)) return(data.frame(`_uuid` = character(0), check.names = FALSE))
+  cols <- lapply(keys, function(k) vapply(x, function(r) {
+    v <- r[[k]]
+    if (is.null(v) || !length(v)) NA_character_ else if (is.list(v)) paste(unlist(v), collapse = " ") else paste(v, collapse = " ")
+  }, character(1)))
+  as.data.frame(setNames(cols, keys), check.names = FALSE, stringsAsFactors = FALSE)
 }
 
 blank_to_na <- function(x) { x <- trimws(as.character(x)); x[x %in% c("", "NA", "n/a")] <- NA; x }

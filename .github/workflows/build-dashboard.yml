@@ -1,45 +1,80 @@
 name: Build dashboard
 
-# Runs whenever the data or the R code changes, rebuilds public/ with R,
-# and commits it back. Vercel then deploys public/ automatically.
+# Pulls submissions from KoBoToolbox, rebuilds the dashboard with R when the
+# data (or the code) changed, and commits public/. Vercel then redeploys.
 on:
+  schedule:
+    - cron: "7,37 * * * *"          # every 30 minutes
+  repository_dispatch:
+    types: [kobo_submission]        # optional instant trigger from KoBo (see README)
+  workflow_dispatch:                # "Run workflow" button
   push:
     branches: [main]
     paths:
       - "data/**"
       - "R/**"
       - "site/**"
+      - "scripts/**"
       - "build_dashboard.R"
       - "DESCRIPTION"
       - ".github/workflows/build-dashboard.yml"
-  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
   group: build-dashboard
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
+      KOBO_TOKEN: ${{ secrets.KOBO_TOKEN }}
+      KOBO_ASSET_UID: ${{ vars.KOBO_ASSET_UID || 'aeaBsrZVMuXeKozLyot5v7' }}
+      KOBO_SERVER: ${{ vars.KOBO_SERVER || 'https://kf.kobotoolbox.org' }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download submissions from KoBoToolbox
+        id: kobo
+        if: env.KOBO_TOKEN != '' && env.KOBO_ASSET_UID != ''
+        run: bash scripts/fetch_kobo.sh
+
+      - name: Decide whether to rebuild
+        id: decide
+        run: |
+          if [[ "${{ github.event_name }}" == "push" || "${{ github.event_name }}" == "workflow_dispatch" || "${{ steps.kobo.outputs.changed }}" == "true" ]]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "No new or edited submissions — nothing to rebuild."
+          fi
+
       - uses: r-lib/actions/setup-r@v2
+        if: steps.decide.outputs.build == 'true'
         with:
           use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
+        if: steps.decide.outputs.build == 'true'
 
       - name: Build dashboard with R
-        run: Rscript build_dashboard.R
+        if: steps.decide.outputs.build == 'true'
+        env:
+          KOBO_HASH: ${{ steps.kobo.outputs.hash }}
+        run: |
+          if [[ -s .kobo/submissions.json ]]; then
+            Rscript build_dashboard.R .kobo/submissions.json
+          else
+            Rscript build_dashboard.R
+          fi
 
       - name: Commit the rebuilt dashboard
+        if: steps.decide.outputs.build == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -48,6 +83,6 @@ jobs:
             echo "Dashboard unchanged."
             exit 0
           fi
-          git commit -m "Rebuild dashboard ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+          git commit -m "Update dashboard: ${{ steps.kobo.outputs.n || 'file' }} submissions ($(date -u +'%Y-%m-%d %H:%M UTC'))"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin HEAD:"${GITHUB_REF_NAME}"

@@ -278,3 +278,7 @@ td.theme-col { min-width: 150px; white-space: normal; }
 .date-row { grid-template-columns: 1fr; }
 table.dataTable tbody td { white-space: nowrap; }
 table.dataTable tbody td.wrap, table.dataTable tbody td.theme-col { white-space: normal; }
+.live-row { display: flex; align-items: center; gap: 8px; color: var(--sidebar-text); font-weight: 600; }
+.live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sidebar-muted); flex: none; }
+.live-dot.on { background: #2cd4a0; box-shadow: 0 0 0 0 rgba(44,212,160,.6); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(44,212,160,.55); } 70% { box-shadow: 0 0 0 8px rgba(44,212,160,0); } 100% { box-shadow: 0 0 0 0 rgba(44,212,160,0); } }
