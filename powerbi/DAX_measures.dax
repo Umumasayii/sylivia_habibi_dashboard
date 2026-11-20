@@ -1,0 +1,136 @@
+// =============================================================================
+// DAX measures for the "Knowing and Living the Self" report
+//
+// HOW TO USE: Home > Enter data > name the table _Measures > Load.
+// Then select _Measures and, for each block below, Modeling > New measure,
+// paste the whole block (name = formula) and press Enter.
+// Set the format shown in [brackets] under Measure tools > Format.
+// =============================================================================
+
+
+// ---------------------------------------------------------------- Counts
+Respondents =
+    DISTINCTCOUNT ( respondents[id] )                                   // [Whole number]
+
+Submissions =
+    COUNTROWS ( submissions )                                           // [Whole number]
+
+Analysed submissions =
+    CALCULATE ( COUNTROWS ( submissions ), submissions[analysed] = "Yes" )   // [Whole number]
+
+Eligibility rate =
+    DIVIDE ( [Analysed submissions], [Submissions] )                    // [Percentage, 0 dp]
+
+Median minutes =
+    MEDIAN ( respondents[duration_min] )                                // [Decimal, 1 dp]
+
+Last updated =
+    "Updated " & FORMAT ( MAX ( meta[last_updated_utc] ), "d mmm yyyy, HH:mm" ) & " UTC"   // [Text]
+
+
+// ---------------------------------------------------------------- Scores (1-4, higher = clearer self-understanding)
+// theme_scores holds one row per respondent x theme (5 themes + "overall").
+// Put themes[theme_label] on an axis to get one bar per theme.
+
+Mean score =
+    AVERAGE ( theme_scores[score] )                                     // [Decimal, 2 dp]
+
+Score n =
+    COUNT ( theme_scores[score] )                                       // [Whole number]
+
+Score SD =
+    STDEV.S ( theme_scores[score] )                                     // [Decimal, 2 dp]
+
+Score CI half-width =
+    VAR n = [Score n]
+    RETURN IF ( n >= 2, T.INV.2T ( 0.05, n - 1 ) * [Score SD] / SQRT ( n ) )   // [Decimal, 2 dp]
+
+Score CI low =
+    [Mean score] - [Score CI half-width]                                // [Decimal, 2 dp]
+
+Score CI high =
+    [Mean score] + [Score CI half-width]                                // [Decimal, 2 dp]
+
+Overall score =
+    CALCULATE ( [Mean score], themes[theme] = "overall" )               // [Decimal, 2 dp]
+
+Overall score CI =
+    VAR lo = CALCULATE ( [Score CI low],  themes[theme] = "overall" )
+    VAR hi = CALCULATE ( [Score CI high], themes[theme] = "overall" )
+    RETURN IF ( ISBLANK ( lo ), "needs 2+ respondents",
+                "95% CI " & FORMAT ( lo, "0.00" ) & "–" & FORMAT ( hi, "0.00" ) )    // [Text]
+
+% High =
+    DIVIDE (
+        CALCULATE ( COUNTROWS ( theme_scores ), theme_scores[level] = "High" ),
+        COUNTROWS ( theme_scores ) )                                    // [Percentage, 0 dp]
+
+% Moderate =
+    DIVIDE (
+        CALCULATE ( COUNTROWS ( theme_scores ), theme_scores[level] = "Moderate" ),
+        COUNTROWS ( theme_scores ) )                                    // [Percentage, 0 dp]
+
+% Low =
+    DIVIDE (
+        CALCULATE ( COUNTROWS ( theme_scores ), theme_scores[level] = "Low" ),
+        COUNTROWS ( theme_scores ) )                                    // [Percentage, 0 dp]
+
+Overall % high =
+    CALCULATE ( [% High], themes[theme] = "overall" )                   // [Percentage, 0 dp]
+
+
+// ---------------------------------------------------------------- Statements (answers table, one row per respondent x statement)
+Answers =
+    COUNTROWS ( answers )                                               // [Whole number]
+
+% Agree =
+    // share of Agree + Strongly agree among answers that are not "Not sure"
+    DIVIDE ( SUM ( answers[agree] ), COUNT ( answers[agree] ) )         // [Percentage, 0 dp]
+
+% Not sure =
+    DIVIDE ( SUM ( answers[not_sure] ), COUNTROWS ( answers ) )         // [Percentage, 0 dp]
+
+Mean item score =
+    // after reverse-scoring; "Not sure" is blank and ignored
+    AVERAGE ( answers[score] )                                          // [Decimal, 2 dp]
+
+% of answers =
+    // for 100%-style charts: share of each answer within the statement on the axis
+    DIVIDE (
+        COUNTROWS ( answers ),
+        CALCULATE ( COUNTROWS ( answers ),
+                    REMOVEFILTERS ( answers[answer], answers[answer_code], answers[answer_order] ) ) )   // [Percentage, 0 dp]
+
+Diverging share =
+    // agree to the right, disagree to the left, "Not sure" excluded.
+    // Use in a stacked bar chart: Y-axis items[item_label], Legend answers[answer], X-axis this measure.
+    VAR code = SELECTEDVALUE ( answers[answer_code] )
+    VAR share =
+        DIVIDE (
+            COUNTROWS ( answers ),
+            CALCULATE ( COUNTROWS ( answers ),
+                        REMOVEFILTERS ( answers[answer], answers[answer_code], answers[answer_order] ),
+                        answers[answer_code] <> 9 ) )
+    RETURN SWITCH ( TRUE (), code = 9, BLANK (), code <= 2, -share, share )   // [Percentage, 0 dp]
+
+
+// ---------------------------------------------------------------- Data quality (submissions table)
+Not analysed =
+    [Submissions] - [Analysed submissions]                              // [Whole number]
+
+Speeders =
+    CALCULATE ( COUNTROWS ( submissions ), submissions[flag_speeder] = "Yes" )        // [Whole number]
+
+Straight-liners =
+    CALCULATE ( COUNTROWS ( submissions ), submissions[flag_straightline] = "Yes" )   // [Whole number]
+
+Many Not sure =
+    CALCULATE ( COUNTROWS ( submissions ), submissions[flag_many_not_sure] = "Yes" )  // [Whole number]
+
+Flagged submissions =
+    CALCULATE (
+        COUNTROWS ( submissions ),
+        FILTER ( submissions,
+            submissions[flag_speeder] = "Yes" || submissions[flag_straightline] = "Yes"
+            || submissions[flag_many_not_sure] = "Yes" || submissions[flag_incomplete] = "Yes"
+            || submissions[flag_duplicate] = "Yes" ) )                  // [Whole number]
