@@ -7,7 +7,7 @@ Everything is computed in **R**; the result is a static website in `public/`, wh
 
 The dashboard updates itself — no Excel uploads needed.
 
-1. Every 30 minutes, GitHub Actions downloads all submissions from the KoBoToolbox API
+1. Every 5 minutes, GitHub Actions downloads all submissions from the KoBoToolbox API
    (`scripts/fetch_kobo.sh`, form `aeaBsrZVMuXeKozLyot5v7` on `kf.kobotoolbox.org`).
 2. If anything changed (new, edited or deleted submissions), R rebuilds the dashboard and commits `public/`.
 3. Vercel publishes the new version; open dashboards notice it within 2 minutes and refresh themselves.
@@ -36,11 +36,13 @@ KoBoToolbox can ping GitHub on every new submission:
    - Custom wrapper around JSON submission: `{"event_type": "kobo_submission", "client_payload": {"submission": %SUBMISSION%}}`
 3. Submit a test response and check **Actions** for a run triggered by `repository_dispatch`.
 
-The 30-minute schedule keeps running either way, so nothing is missed if the ping fails.
+The 5-minute schedule keeps running either way, so nothing is missed if the ping fails.
 
 ### Without the API (fallback)
 
 If `KOBO_TOKEN` is not set, the build uses the newest `.xlsx`/`.xls`/`.csv` export in `data/` instead.
+
+> The repository should be **public** for a 5-minute schedule: public repositories get unlimited free Actions minutes, while private ones get 2,000 a month (enough for about a 30-minute schedule). To change the frequency, edit the `cron` line in `.github/workflows/build-dashboard.yml`.
 
 > GitHub pauses scheduled workflows in repositories with no activity for 60 days. If that happens, open **Actions** and re-enable the workflow.
 

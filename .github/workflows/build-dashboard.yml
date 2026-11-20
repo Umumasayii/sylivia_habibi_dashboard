@@ -4,7 +4,7 @@ name: Build dashboard
 # data (or the code) changed, and commits public/. Vercel then redeploys.
 on:
   schedule:
-    - cron: "7,37 * * * *"          # every 30 minutes
+    - cron: "*/5 * * * *"            # every 5 minutes (GitHub may delay runs by a few minutes)
   repository_dispatch:
     types: [kobo_submission]        # optional instant trigger from KoBo (see README)
   workflow_dispatch:                # "Run workflow" button
