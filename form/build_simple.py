@@ -64,48 +64,20 @@ row(type="begin_group", name="section_b", label="Section B: Your Current Life Co
     appearance="field-list", relevant=ELIG)
 row(type="note", name="section_b_note",
     label="These questions provide context for interpreting the findings. They are not intended to define your identity.")
-SEL = lambda q, o: f"selected(${{{q}}}, '{o}')"
-MOTHER = f"({SEL('primary_activity','Working_Mother')} or {SEL('primary_activity','Stay_home_mother')})"
-FATHER = f"({SEL('primary_activity','Working_Father')} or {SEL('primary_activity','Stay_home_Father')})"
-EMPLOYED = "(selected(., 'Employed_full-time') or selected(., 'Employed_part-time') or selected(., 'Self-employed_or_running_a_business'))"
-STAYHOME = "(selected(., 'Stay_home_mother') or selected(., 'Stay_home_Father'))"
-row(type="select_multiple activity", name="primary_activity",
-    label="4. What is your current primary activity?", hint="Select all that apply.", required="yes",
-    constraint=("not((selected(., 'Working_Mother') or selected(., 'Stay_home_mother')) and (selected(., 'Working_Father') or selected(., 'Stay_home_Father')))"
-                " and not(selected(., 'Working_Mother') and selected(., 'Stay_home_mother'))"
-                " and not(selected(., 'Working_Father') and selected(., 'Stay_home_Father'))"
-                f" and not({STAYHOME} and {EMPLOYED})"
-                f" and not(selected(., 'Unemployed_and_looking_for_work') and {EMPLOYED})"),
-    constraint_message="Some of these answers cannot all be true. See the red message below the question.")
 WARN = '⚠️ {}'
-row(type="note", name="warn_mother_father", relevant=f"{MOTHER} and {FATHER}",
-    label=WARN.format("Please choose either the **mother** options or the **father** options, not both."))
-row(type="note", name="warn_work_stay", relevant=(f"({SEL('primary_activity','Working_Mother')} and {SEL('primary_activity','Stay_home_mother')}) or "
-                                                   f"({SEL('primary_activity','Working_Father')} and {SEL('primary_activity','Stay_home_Father')})"),
-    label=WARN.format("**Working** parent and **stay-home** parent cannot both apply. Please keep only one."))
-row(type="note", name="warn_stay_employed",
-    relevant=(f"({SEL('primary_activity','Stay_home_mother')} or {SEL('primary_activity','Stay_home_Father')}) and "
-              f"({SEL('primary_activity','Employed_full-time')} or {SEL('primary_activity','Employed_part-time')} or {SEL('primary_activity','Self-employed_or_running_a_business')})"),
-    label=WARN.format("A **stay-home** parent is not also employed or self-employed. If you work, choose **Working mother/father** instead."))
-row(type="note", name="warn_unemployed",
-    relevant=(f"{SEL('primary_activity','Unemployed_and_looking_for_work')} and "
-              f"({SEL('primary_activity','Employed_full-time')} or {SEL('primary_activity','Employed_part-time')} or {SEL('primary_activity','Self-employed_or_running_a_business')})"),
-    label=WARN.format("**Unemployed** cannot be combined with employed or self-employed."))
+row(type="select_multiple activity", name="primary_activity",
+    label="4. What is your current primary activity?", hint="Select all that apply.", required="yes")
 row(type="text", name="primary_activity_other", label="Please specify the other activity.",
     required="yes", relevant="selected(${primary_activity}, 'Other')")
-row(type="calculate", name="parent_role", calculation=f"if({MOTHER} or {FATHER}, '1', '0')")
 REL = ["I_am_single", "I_am_dating_or_in_a_relationship", "I_am_married", "I_am_separated_divorced_or_widowed"]
 row(type="select_multiple circumstance", name="current_circumstances",
     label="5. Which of the following currently applies to you?",
     hint="Select all that apply. Choose only one relationship status (single, dating/in a relationship, married, or separated/divorced/widowed).",
     required="yes",
-    choice_filter="${parent_role} = '0' or name != 'None_of_these_reflects_my_current_circumstances'",
     constraint=("not(selected(., 'None_of_these_reflects_my_current_circumstances') and count-selected(.) > 1)"
                 " and (" + " + ".join(f"number(selected(., '{r}'))" for r in REL) + ") <= 1"
-                " and (${parent_role} = '0' or selected(., 'I_am_a_parent'))"),
-    constraint_message="Please check your answers: choose only one relationship status; ‘None of these’ cannot be combined with other options; and if you are a mother or father, please also select ‘I am a parent’.")
-row(type="note", name="hint_parent", relevant="${parent_role} = '1' and not(selected(${current_circumstances}, 'I_am_a_parent'))",
-    label='ℹ️ You said you are a mother or father in Q4, so please also select **I am a parent**.')
+),
+    constraint_message="Please choose only one relationship status, and do not combine ‘None of these’ with other options.")
 row(type="note", name="warn_relationship",
     relevant="(" + " + ".join(f"number(selected(${{current_circumstances}}, '{r}'))" for r in REL) + ") > 1",
     label=WARN.format("Please choose only **one** relationship status."))
@@ -180,7 +152,7 @@ for c in choices:
 one("agree", ["Strongly agree", "Agree", "Disagree", "Strongly disagree", "Not sure"])
 
 settings = [dict(form_title="Knowing and Living the Self: An Anonymous Survey of Adults Aged 18–50",
-                 form_id="knowing_living_self", version="2026112004", style="pages")]
+                 form_id="knowing_living_self", version="2026112005", style="pages")]
 
 wb = Workbook()
 HF = Font(name="Arial", bold=True, color="FFFFFF"); HFILL = PatternFill("solid", start_color="1F4E79")
