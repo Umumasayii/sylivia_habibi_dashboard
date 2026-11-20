@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "echo 'No install needed'",
+  "buildCommand": "echo 'Dashboard is pre-built by GitHub Actions (R)'",
+  "outputDirectory": "public",
+  "ignoreCommand": "if [ ! -f public/index.html ]; then exit 0; fi; git diff --quiet HEAD^ HEAD -- public/",
+  "cleanUrls": true
+}

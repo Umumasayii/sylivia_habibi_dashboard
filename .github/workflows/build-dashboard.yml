@@ -1,0 +1,53 @@
+name: Build dashboard
+
+# Runs whenever the data or the R code changes, rebuilds public/ with R,
+# and commits it back. Vercel then deploys public/ automatically.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "R/**"
+      - "assets/**"
+      - "build_dashboard.R"
+      - "DESCRIPTION"
+      - ".github/workflows/build-dashboard.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-dashboard
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      - name: Build dashboard with R
+        run: Rscript build_dashboard.R
+
+      - name: Commit the rebuilt dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A public
+          if git diff --cached --quiet; then
+            echo "Dashboard unchanged."
+            exit 0
+          fi
+          git commit -m "Rebuild dashboard ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin HEAD:"${GITHUB_REF_NAME}"
