@@ -1,0 +1,6 @@
+theme,label,items,mean,lo,hi,sd,n,alpha,mean_r,n_complete
+identity,Who I am,5,2.25,,,,1,,,0
+social,Myself among others,5,2.25,,,,1,,,0
+feedback,"Strengths, criticism and mistakes",5,3,,,,1,,,0
+values,Values and actions,3,2.33,,,,1,,,1
+reflect,Emotions and reflection,3,4,,,,1,,,0
