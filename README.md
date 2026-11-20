@@ -14,16 +14,16 @@ You can also start a rebuild by hand: **Actions → Build dashboard → Run work
 
 ## What the dashboard shows
 
-| Tab | Contents |
+A single-page web app (sidebar navigation, global filters, light/dark theme, value labels, shareable links, PDF printing):
+
+| Page | Contents |
 | --- | --- |
-| Overview | Key figures, eligibility funnel, submissions over time, theme scores, completion time |
-| Participants | Age group, primary activity (Q4), circumstances (Q5), ‘Other’ answers |
-| Statements | Agree/disagree distribution for Q6–Q26, mean score per statement, ‘Not sure’ rates, summary table |
-| Theme scores | Theme means with 95% CIs, score spread, scores by age, activity and circumstances, theme correlations |
-| Reliability | Cronbach's α per theme and corrected item–total correlations |
-| Explore | Linked filters (age, score range, main activity) driving a histogram, scatter plot and respondent table |
-| Comments | Open answers to Q27 |
-| Methods | Scoring rules and CSV downloads of the processed data |
+| Overview | Narrative summary, KPI cards, theme scores with 95% CIs, score levels, key findings, eligibility funnel |
+| Respondents | Age, primary activity (Q4), circumstances (Q5), circumstances × age heatmap — click any bar to filter everything |
+| Statements | Diverging agree/disagree chart, reverse-scored item means with CIs, shaded summary table, single-statement drill-down by age |
+| Themes | Theme means, violin plots, live group comparisons, score levels, correlations, scatter, and R significance tests (Kruskal–Wallis / Wilcoxon, effect sizes, Benjamini–Hochberg) |
+| Data explorer | Bordered, searchable table of every response with per-column filters, column picker and Copy/CSV/Excel/Print export; open comments |
+| Methods & quality | Cronbach's α with bootstrap CIs, item diagnostics, completion time, ineligibility reasons, flagged responses, scoring rules, codebook |
 
 ## Scoring rules
 
@@ -38,13 +38,12 @@ The rules live in `R/01_setup.R` (`ITEMS`, `THEMES`) — edit them there and pus
 
 ```
 data/                      KoBo export (replace this)
-R/01_setup.R               packages, item list, themes, colours
-R/02_clean.R               reads any KoBo export and standardises it
-R/03_analysis.R            summaries, confidence intervals, Cronbach's alpha
-R/04_plots.R               plotly charts and DT tables
-R/05_page.R                page layout and tabs
+R/01_setup.R               item list, themes, reverse-scored items, options
+R/02_clean.R               reads any KoBo export, standardises it, scores it, flags quality issues
+R/03_stats.R               reliability (bootstrap CIs), item diagnostics, group tests
+R/04_export.R              writes public/data/dashboard.js|json and respondent_scores.csv
 build_dashboard.R          entry point: Rscript build_dashboard.R
-assets/                    CSS and tab script
+site/                      the web app (HTML, CSS, JS, bundled libraries) — copied to public/
 public/                    generated website (do not edit by hand)
 .github/workflows/         automatic rebuild on push
 vercel.json                Vercel serves public/ as a static site
@@ -53,11 +52,10 @@ vercel.json                Vercel serves public/ as a static site
 ## Run it on your computer
 
 ```r
-install.packages(c("readxl", "readr", "dplyr", "tidyr", "stringr", "purrr", "tibble",
-                   "plotly", "DT", "crosstalk", "htmltools", "htmlwidgets", "jsonlite"))
+install.packages(c("readxl", "readr", "dplyr", "tidyr", "stringr", "purrr", "tibble", "jsonlite"))
 ```
 
-Then, from the project folder: `Rscript build_dashboard.R` and open `public/index.html`.
+Then, from the project folder: `Rscript build_dashboard.R` and open `public/index.html` in a browser.
 
 ## Connect Vercel (one time)
 

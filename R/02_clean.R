@@ -161,5 +161,22 @@ score_survey <- function(d) {
   d$score_overall <- rowmean(paste0("r_", ITEMS$item))
   d$n_not_sure <- rowSums(as.matrix(d[ITEMS$item]) == "Not sure", na.rm = TRUE)
   d$n_answered <- rowSums(!is.na(as.matrix(d[ITEMS$item])))
+
+  # ---- Data-quality flags (used on the Data quality page) -------------------
+  ans <- as.matrix(d[ITEMS$item])
+  d$n_distinct <- apply(ans, 1, function(r) length(unique(r[!is.na(r)])))
+  d$flag_speeder      <- !is.na(d$duration_min) & d$duration_min < 3
+  d$flag_straightline <- d$n_answered >= 15 & d$n_distinct == 1
+  d$flag_not_sure     <- d$n_not_sure >= 6
+  d$flag_incomplete   <- d$eligible & d$n_answered < nrow(ITEMS)
+  d$flag_duplicate    <- duplicated(d$id) | duplicated(d$id, fromLast = TRUE)
+  d$inelig_reason <- dplyr::case_when(
+    d$eligible ~ "",
+    is.na(d$age_group) ~ "Age not given",
+    !d$age_ok ~ "Outside 18–50",
+    !(d$lives_rwanda %in% "Yes") ~ "Not living in Rwanda",
+    !(d$consent %in% "Agreed") ~ "No consent",
+    TRUE ~ "Other"
+  )
   d
 }

@@ -8,7 +8,7 @@ on:
     paths:
       - "data/**"
       - "R/**"
-      - "assets/**"
+      - "site/**"
       - "build_dashboard.R"
       - "DESCRIPTION"
       - ".github/workflows/build-dashboard.yml"

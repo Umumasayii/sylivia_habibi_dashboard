@@ -14,9 +14,4 @@ Imports:
     stringr,
     purrr,
     tibble,
-    plotly,
-    DT,
-    crosstalk,
-    htmltools,
-    htmlwidgets,
     jsonlite

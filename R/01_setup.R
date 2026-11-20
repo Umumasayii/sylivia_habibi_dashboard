@@ -9,11 +9,6 @@ suppressPackageStartupMessages({
   library(tidyr)
   library(stringr)
   library(purrr)
-  library(plotly)
-  library(DT)
-  library(crosstalk)
-  library(htmltools)
-  library(htmlwidgets)
   library(jsonlite)
 })
 
@@ -95,10 +90,28 @@ CIRCUMSTANCE_OPTS <- c(
   "None of these"                          = "none of these"
 )
 
-# ---- Chart colours (validated reference palette, light mode) ----------------
-THEME_COL <- c(identity = "#2a78d6", social = "#eb6834", feedback = "#1baf7a",
-               values = "#eda100", reflect = "#e87ba4")
-LIKERT_COL <- c("Strongly disagree" = "#c23b3b", "Disagree" = "#ec9a95",
-                "Agree" = "#86b6ef", "Strongly agree" = "#1c5cab", "Not sure" = "#c3c2b7")
-BLUE  <- "#2a78d6"
-INK   <- "#0b0b0b"; INK2 <- "#52514e"; MUTED <- "#898781"; GRID <- "#e1e0d9"
+
+# Full statement wording (as shown to respondents)
+STATEMENT_TEXT <- c(
+  "When someone asks me to describe who I am, I find it difficult to know what to say beyond my roles, responsibilities, or achievements.",
+  "When I imagine losing an important role, such as my job, relationship, or position in the family, I am unsure what would remain of my identity.",
+  "My understanding of who I am changes considerably depending on what other people say or think about me.",
+  "After making an important decision, I sometimes wonder, “Did I genuinely want this, or was I influenced by what others expected?”",
+  "I can recognise the qualities that make me different from people around me without needing to see myself as better or worse than them.",
+  "I notice that I present very different versions of myself depending on whether I am with family, friends, colleagues, or other groups.",
+  "I sometimes copy how other people speak, dress, behave, or express opinions because I want to feel accepted.",
+  "What I say I want can change depending on who I am talking to at the time.",
+  "I have made important choices in relationships, work, or life mainly because I did not want to disappoint someone.",
+  "Even when my opinion is unpopular, I can recognise which thoughts and beliefs are genuinely my own.",
+  "I can identify my strengths and limitations without needing someone else to point them out first.",
+  "When someone criticises me, my first reaction is usually to defend myself rather than consider whether the criticism may be useful.",
+  "I try to appear strong and in control, even when I am struggling, uncertain, or in need of help.",
+  "When someone describes me in a way I do not recognise, I can pause and examine their perspective before accepting or rejecting it.",
+  "I can admit that I was wrong without feeling that the mistake defines who I am.",
+  "I can name the personal values that guide my decisions and explain why those values matter to me.",
+  "Looking back at my recent choices, my actions generally reflect the values I say are important to me.",
+  "When my behaviour goes against my values, I can recognise the inconsistency instead of immediately justifying it.",
+  "I can usually identify what triggered a strong emotion, such as anger, frustration, fear, jealousy, excitement, or happiness.",
+  "I intentionally make time to examine my choices, emotions, and recurring patterns, even when no one else will know that I have done so.",
+  "When I am in an argument, I can easily know if it is to protect my values or to protect my pride."
+)
