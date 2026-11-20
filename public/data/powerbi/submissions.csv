@@ -1,0 +1,8 @@
+id,submitted_date,age_group,age_eligible,lives_rwanda,consent,analysed,not_analysed_reason,duration_min,flag_speeder,flag_straightline,flag_many_not_sure,flag_incomplete,flag_duplicate
+918843119,2026-11-20,25–34,Yes,Yes,Agreed,Yes,,1.27,Yes,No,No,No,No
+918959227,2026-11-20,18–24,Yes,Yes,Agreed,Yes,,3.5,No,No,No,No,No
+918980561,2026-11-20,25–34,Yes,Yes,Agreed,Yes,,27.47,No,No,No,No,No
+918984618,2026-11-20,35–44,Yes,Yes,Agreed,Yes,,4.77,No,No,No,No,No
+919009186,2026-11-20,25–34,Yes,Yes,Agreed,Yes,,30.05,No,No,No,No,No
+919057186,2026-11-20,25–34,Yes,Yes,Agreed,Yes,,63.42,No,No,No,No,No
+919060317,2026-11-20,25–34,Yes,Yes,Agreed,Yes,,1.05,Yes,No,No,No,No
