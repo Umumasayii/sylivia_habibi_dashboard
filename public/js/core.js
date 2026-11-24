@@ -42,6 +42,30 @@
     const vi = [...Array(k).keys()].map((j) => S.sd(rows.map((r) => r[j])) ** 2), vt = S.sd(rows.map((r) => r.reduce((s, x) => s + x, 0))) ** 2;
     return { alpha: vt > 0 ? (k / (k - 1)) * (1 - vi.reduce((s, x) => s + x, 0) / vt) : null, n: rows.length }; };
 
+  // Welch difference of means (a − b) with 95% CI; "likely real" when the CI excludes 0
+  S.diff = (a, b) => {
+    a = S.clean(a); b = S.clean(b);
+    if (a.length < 2 || b.length < 2) return null;
+    const ma = S.mean(a), mb = S.mean(b), va = S.sd(a) ** 2 / a.length, vb = S.sd(b) ** 2 / b.length;
+    const se = Math.sqrt(va + vb); if (!(se > 0)) return { d: ma - mb, lo: null, hi: null, real: false };
+    const df = (va + vb) ** 2 / ((va ** 2) / (a.length - 1) + (vb ** 2) / (b.length - 1));
+    const h = S.tcrit(Math.max(1, Math.floor(df))) * se;
+    return { d: ma - mb, lo: ma - mb - h, hi: ma - mb + h, real: ma - mb - h > 0 || ma - mb + h < 0 };
+  };
+
+  // ------------------------------------------------------------------ Self-Clarity Index
+  // index = (mean score − 1) / 3 × 100, so 0 = least and 100 = clearest self-understanding
+  K.toIdx = (x) => (x == null ? null : ((x - 1) / 3) * 100);
+  K.LEVEL_CUTS = { low: 40, high: 70 };
+  K.level = (i) => (i == null ? null : i >= K.LEVEL_CUTS.high ? "High" : i >= K.LEVEL_CUTS.low ? "Moderate" : "Low");
+  K.MIN_GROUP = 5;                                   // smaller groups are not compared
+  // does this answer code show self-clarity? (reverse-worded items: disagreeing is the clear answer)
+  K.clearness = (it, code) => {
+    if (code == null || code === 9) return null;
+    const pos = it.reverse ? 5 - code : code;        // 4 = strong clarity … 1 = strong difficulty
+    return pos;
+  };
+
   // ------------------------------------------------------------------ records
   K.records = D.records.map((r) => {
     const ans = {};
@@ -51,9 +75,10 @@
     const s = {};
     K.THEMES.forEach((t) => (s[t.key] = S.mean(t.items.map((q) => sc[q]))));
     s.overall = S.mean(K.ITEMS.map((it) => sc[it.key]));
+    const idx = {}; Object.keys(s).forEach((k) => (idx[k] = K.toIdx(s[k])));
     const act = [].concat(r.act || []), circ = [].concat(r.circ || []);
     return Object.assign({}, r, {
-      a: ans, r: sc, s, act, circ, mainAct: act[0] || "(none)",
+      a: ans, r: sc, s, idx, lvl: K.level(idx.overall), act, circ, mainAct: act[0] || "(none)",
       nNS: K.ITEMS.filter((it) => ans[it.key] === 9).length,
       nAns: K.ITEMS.filter((it) => ans[it.key] != null).length,
       flags: r.flags || {},
@@ -63,7 +88,7 @@
   K.dateMin = dates[0] || ""; K.dateMax = dates[dates.length - 1] || "";
 
   // ------------------------------------------------------------------ state + filters
-  K.state = { page: "exec", age: "", act: "", circ: "", from: "", to: "", labels: false };
+  K.state = { page: "summary", age: "", act: "", circ: "", from: "", to: "", labels: false };
   K.match = (r) => {
     const s = K.state;
     if (s.age && r.age !== s.age) return false;
@@ -84,7 +109,7 @@
   K.int = (x) => (x == null ? "–" : Number(x).toLocaleString("en-GB"));
   K.p = (p) => (p == null ? "–" : p < 0.001 ? "< 0.001" : p.toFixed(3));
   K.dateLabel = (s) => (s ? new Date(s + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "–");
-  K.scoreLevel = (x) => (x == null ? null : x >= 3 ? "High" : x >= 2 ? "Moderate" : "Low");
+  K.i0 = (x) => (x == null || Number.isNaN(x) ? "–" : Math.round(x).toString());
 
   // ------------------------------------------------------------------ colours
   K.css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -99,6 +124,10 @@
   K.likertColor = (code) => (K.dark()
     ? { 1: "#f07171", 2: "#8f4646", 3: "#35619a", 4: "#7fb2f0", 9: "#5b6577" }
     : { 1: "#c23b3b", 2: "#ec9a95", 3: "#86b6ef", 4: "#1c5cab", 9: "#b9bfca" })[code];
+  K.clearColor = (code) => (K.dark()
+    ? { 4: "#2cc4b2", 3: "#1f7f74", 2: "#a3662b", 1: "#f08a4b", 9: "#5b6577" }
+    : { 4: "#0b7d70", 3: "#7fcdbf", 2: "#f3b48a", 1: "#c4561c", 9: "#c3c8d1" })[code];
+  K.CLEAR_LABEL = { 4: "Strong self-clarity", 3: "Some self-clarity", 2: "Some difficulty", 1: "Strong difficulty", 9: "Not sure" };
   K.levelColor = (lvl) => (K.dark() ? { Low: "#f07171", Moderate: "#c9a13b", High: "#3fd17a" } : { Low: "#d03b3b", Moderate: "#eda100", High: "#0a8f3c" })[lvl];
   K.seqScale = () => (K.dark()
     ? [[0, "#0d1a33"], [0.5, "#1c5cab"], [1, "#9ec5f4"]]

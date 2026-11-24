@@ -5,9 +5,8 @@
   "use strict";
   const K = window.K, P = K.pages, $ = (s) => document.querySelector(s);
   const NAV = [
-    ["Summary", ["overview", "respondents"]],
-    ["Results", ["statements", "themes"]],
-    ["Data", ["explorer", "methods"]],
+    ["The story", ["summary", "respondents", "strengths", "themes", "differences", "voices"]],
+    ["For researchers", ["methods"]],
   ];
   const FILTER_LABEL = { age: "Age", act: "Activity", circ: "Circumstance", from: "From", to: "To" };
 
@@ -33,7 +32,8 @@
   // ---------------------------------------------------------------- URL state
   const readHash = () => {
     const [page, q] = location.hash.replace(/^#/, "").split("?");
-    K.state.page = P[page] ? page : "overview";
+    const OLD = { overview: "summary", statements: "strengths", explorer: "methods" };   // links shared before the redesign
+    K.state.page = P[page] ? page : P[OLD[page]] ? OLD[page] : "summary";
     const p = new URLSearchParams(q || "");
     ["age", "act", "circ", "from", "to"].forEach((k) => (K.state[k] = p.get(k) || ""));
   };
