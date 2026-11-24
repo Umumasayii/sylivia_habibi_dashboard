@@ -47,6 +47,11 @@ jobs:
       - name: Decide whether to rebuild
         id: decide
         run: |
+          if [[ "${{ steps.src.outcome }}" == "failure" ]]; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Could not download the responses workbook; the current dashboard stays online."
+            exit 0
+          fi
           if [[ -z "$EXCEL_URL" ]] && ! ls data/*.xlsx data/*.xls data/*.csv >/dev/null 2>&1; then
             echo "build=false" >> "$GITHUB_OUTPUT"
             echo "::warning::Add the EXCEL_URL secret (the SharePoint share link) to build the dashboard."
