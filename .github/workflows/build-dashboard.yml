@@ -41,6 +41,7 @@ jobs:
       - name: Download responses workbook from SharePoint
         id: src
         if: env.EXCEL_URL != ''
+        continue-on-error: true   # a failed download keeps the last dashboard online
         run: bash scripts/fetch_excel.sh
 
       - name: Decide whether to rebuild
