@@ -16,11 +16,19 @@ if [[ "$URL" != *"download=1"* ]]; then
 fi
 
 mkdir -p .excel
-curl -fsSL --retry 4 --retry-delay 5 --max-time 120 \
-     -A "Mozilla/5.0 (dashboard-bot)" "$URL" -o .excel/responses.xlsx
+get() { curl -fsSL --retry 4 --retry-delay 5 --max-time 120 -A "Mozilla/5.0 (dashboard-bot)" "$1" -o .excel/responses.xlsx || true; }
+is_xlsx() { [[ -s .excel/responses.xlsx && "$(head -c 2 .excel/responses.xlsx)" == "PK" ]]; }
+
+get "$URL"
+# Personal OneDrive (1drv.ms / onedrive.live.com) links: fall back to the OneDrive
+# "shares" API, which turns an anonymous share link into a direct download
+if ! is_xlsx && [[ "$EXCEL_URL" == *1drv.ms* || "$EXCEL_URL" == *onedrive.live.com* ]]; then
+  ENC="$(printf '%s' "$EXCEL_URL" | base64 -w0 | tr '+/' '-_' | tr -d '=')"
+  get "https://api.onedrive.com/v1.0/shares/u!$ENC/root/content"
+fi
 
 # An .xlsx file is a zip archive and starts with "PK"
-if [[ "$(head -c 2 .excel/responses.xlsx)" != "PK" ]]; then
+if ! is_xlsx; then
   echo "The link did not return an Excel file (got a web page instead)." >&2
   echo "Make sure the share link is set to 'Anyone with the link can view'." >&2
   exit 1

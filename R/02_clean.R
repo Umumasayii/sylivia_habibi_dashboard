@@ -32,10 +32,10 @@ read_any <- function(path) {
 
 # ---- Microsoft Forms responses workbook ---------------------------------------
 # Forms names each column after the question wording (no numbers) and adds
-# ID, Start time, Completion time, Email, Name, Last modified time.
+# Id, Start time, Completion time, Email, Name (and sometimes Last modified time).
 # Multiple answers are joined with ";". This renames the columns to the
 # field names used below, so everything downstream stays the same.
-is_forms_export <- function(raw) all(c("ID", "Completion time") %in% names(raw))
+is_forms_export <- function(raw) all(c("id", "completion time") %in% tolower(trimws(names(raw))))
 
 norm_text <- function(x) gsub("[^a-z0-9]+", " ", tolower(iconv(x, to = "ASCII//TRANSLIT", sub = " ")))
 
@@ -46,9 +46,9 @@ standardise_forms <- function(raw) {
     which(startsWith(key, t) | grepl(paste0("^[0-9]+ ", t), key))[1]
   }
   map <- c(
-    `_uuid`       = which(names(raw) == "ID")[1],
-    start         = which(names(raw) == "Start time")[1],
-    end           = which(names(raw) == "Completion time")[1],
+    `_uuid`       = which(tolower(trimws(names(raw))) == "id")[1],
+    start         = which(tolower(trimws(names(raw))) == "start time")[1],
+    end           = which(tolower(trimws(names(raw))) == "completion time")[1],
     age_group     = find("What is your age group"),
     lives_rwanda  = find("Do you currently live in Rwanda"),
     consent       = find("Do you voluntarily agree to participate"),
