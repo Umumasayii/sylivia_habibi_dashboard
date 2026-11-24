@@ -18,7 +18,9 @@ fi
 mkdir -p .excel
 get() {
   local info
+  # keep cookies across redirects: an "Anyone" link sets a guest cookie first
   info="$(curl -sSL --retry 4 --retry-delay 5 --max-time 120 -A "Mozilla/5.0 (dashboard-bot)" \
+          -c .excel/cookies.txt -b .excel/cookies.txt \
           -o .excel/responses.xlsx -w '%{http_code} %{url_effective}' "$1" || true)"
   # log the HTTP status and the host we ended up on (never the full link)
   echo "  link host: $(printf '%s' "$1" | awk -F/ '{print $3}') · HTTP ${info%% *} · ended on: $(printf '%s' "${info#* }" | awk -F/ '{print $3}')"
