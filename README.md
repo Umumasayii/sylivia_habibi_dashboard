@@ -47,16 +47,19 @@ If `EXCEL_URL` is not set, the build uses the newest `.xlsx`/`.xls`/`.csv` file 
 
 ## What the dashboard shows
 
-A single-page web app (sidebar navigation, global filters, light/dark theme, value labels, shareable links, PDF printing):
+Every page answers one question, opens with a plain-language answer, and uses one score:
+the **Self-Clarity Index** (0–100, higher = clearer self-understanding) = (mean 1–4 score − 1) ÷ 3 × 100,
+with levels **Low 0–39 · Moderate 40–69 · High 70–100**. Global filters (age, activity, circumstances, dates) apply everywhere.
 
-| Page | Contents |
-| --- | --- |
-| Overview | Narrative summary, KPI cards, theme scores with 95% CIs, score levels, key findings, eligibility funnel |
-| Respondents | Age, primary activity (Q4), circumstances (Q5), circumstances × age heatmap — click any bar to filter everything |
-| Statements | Diverging agree/disagree chart, reverse-scored item means with CIs, shaded summary table, single-statement drill-down by age |
-| Themes | Theme means, violin plots, live group comparisons, score levels, correlations, scatter, and R significance tests (Kruskal–Wallis / Wilcoxon, effect sizes, Benjamini–Hochberg) |
-| Data explorer | Bordered, searchable table of every response with per-column filters, column picker and Copy/CSV/Excel/Print export; open comments |
-| Methods & quality | Cronbach's α with bootstrap CIs, item diagnostics, completion time, ineligibility reasons, flagged responses, scoring rules, codebook |
+| Page | Question | Contents |
+| --- | --- | --- |
+| Summary | How clearly do adults understand themselves? | Index KPI with 95% CI, % High, theme indices on Low/Moderate/High zones, level split by age, auto-written key findings |
+| Who answered | Who is in the data? | Age, main activity (Q4), circumstances (Q5) — click to filter — and the screening funnel |
+| Strengths & growth areas | Where are people clear, and where do they struggle? | Top 3 strengths / growth areas, all 21 statements as self-clarity vs difficulty bars, statement table |
+| Themes in depth | What does each dimension look like? | Tabs per theme: index, levels, its statements, by age group |
+| Who differs | Do groups differ? | Group dot plot with 95% CIs, group × theme table with ▲/▼ where the gap is likely real (Welch CI excludes 0; groups < 5 not compared), plain sentences |
+| In their own words | What do people say about themselves? | Q27 quote cards filterable by level, most-used words |
+| Data & methods | Can we trust the numbers? | All responses (search/export), scoring rules, reliability (α, bootstrap CI), item diagnostics, quality flags, R rank-based tests, codebook |
 
 ## Scoring rules
 

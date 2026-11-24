@@ -63,6 +63,11 @@ export_dashboard <- function(d, st, data_file, out_dir = "public/data") {
     dplyr::bind_cols(v[ITEMS$item], v[paste0("r_", ITEMS$item)],
                      v[c(paste0("score_", names(THEMES)), "score_overall", "n_not_sure",
                          "n_answered", "duration_min", "comments")])
+  # Self-Clarity Index (0–100) per theme and overall: (mean score − 1) / 3 × 100
+  to_idx <- function(x) round((x - 1) / 3 * 100, 1)
+  for (t in c(names(THEMES), "overall")) out[[paste0("index_", t)]] <- to_idx(v[[paste0("score_", t)]])
+  out$level_overall <- cut(out$index_overall, c(-Inf, 40, 70, Inf), right = FALSE,
+                           labels = c("Low", "Moderate", "High"))
   readr::write_csv(out, file.path(out_dir, "respondent_scores.csv"), na = "")
   invisible(TRUE)
 }

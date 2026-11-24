@@ -282,3 +282,41 @@ table.dataTable tbody td.wrap, table.dataTable tbody td.theme-col { white-space:
 .live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sidebar-muted); flex: none; }
 .live-dot.on { background: #2cd4a0; box-shadow: 0 0 0 0 rgba(44,212,160,.6); animation: pulse 2s infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(44,212,160,.55); } 70% { box-shadow: 0 0 0 8px rgba(44,212,160,0); } 100% { box-shadow: 0 0 0 0 rgba(44,212,160,0); } }
+
+/* ---- redesign: Self-Clarity Index pages --------------------------------- */
+.k-value small, .s-value small { font-size: .5em; font-weight: 600; color: var(--muted); margin-left: 2px; }
+.muted { color: var(--muted); }
+.tabbar { margin: 4px 0 14px; overflow-x: auto; }
+.seg.wide { display: flex; flex-wrap: wrap; }
+.seg.wide button { padding: 7px 12px; font-size: 12.5px; }
+ul.plain { margin: 6px 0 0; padding-left: 18px; } ul.plain li { margin: 3px 0; }
+/* strength / growth cards */
+.qgrid { display: grid; gap: 10px; }
+.qcard { border: 1px solid var(--border); border-left: 4px solid var(--good); border-radius: 10px; padding: 10px 12px; background: var(--surface); }
+.qcard.grow { border-left-color: var(--warn); }
+.qcard p { margin: 6px 0 4px; font-size: 14px; line-height: 1.45; color: var(--text); }
+.qcard small { color: var(--muted); font-size: 11.5px; }
+.qc-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.qc-pct { font-size: 22px; font-weight: 750; color: var(--good); font-variant-numeric: tabular-nums; }
+.qcard.grow .qc-pct { color: var(--warn); }
+.qc-what { font-weight: 600; color: var(--text-2); margin-right: auto; }
+/* group × theme heat table */
+.htable { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: 13px; }
+.htable th { text-align: left; font-weight: 600; color: var(--text-2); padding: 6px 8px; white-space: nowrap; }
+.htable thead th { font-size: 12px; color: var(--muted); text-align: center; white-space: normal; vertical-align: bottom; }
+.htable thead th:first-child { text-align: left; }
+.htable td { text-align: center; padding: 8px 6px; border-radius: 7px; position: relative; font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--accent) var(--p, 20%), var(--surface)); color: var(--text); font-weight: 650; }
+.htable td.allv { background: var(--surface-3); }
+.hnote { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+.htable td.n { background: var(--surface-3); font-weight: 500; color: var(--text-2); }
+.htable td.small { opacity: .55; } .htable td.na { background: var(--surface-3); color: var(--muted); }
+.htable tr.all th, .htable tr.all td { border-top: 2px solid var(--border-strong); }
+.htable .mk { font-size: 10px; margin-left: 4px; } .htable .mk.up { color: var(--good); } .htable .mk.down { color: var(--bad); }
+/* quotes */
+.quotes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; max-height: 560px; overflow-y: auto; padding-right: 4px; }
+.quote { margin: 0; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--surface); display: flex; flex-direction: column; justify-content: space-between; }
+.quote blockquote { margin: 0 0 8px; font-size: 14px; line-height: 1.45; color: var(--text); position: relative; padding-left: 14px; }
+.quote blockquote::before { content: "“"; position: absolute; left: -2px; top: -6px; font-size: 26px; color: var(--accent); }
+.quote figcaption { font-size: 11.5px; color: var(--muted); }
+.qt { font-style: italic; font-weight: 600; color: var(--text); }
