@@ -1,46 +1,45 @@
 # Knowing and Living the Self — Survey Dashboard
 
-An interactive dashboard for the anonymous KoBoToolbox survey of adults aged 18–50 in Rwanda.
+An interactive dashboard for the anonymous Microsoft Forms survey of adults aged 18–50 in Rwanda.
 Everything is computed in **R**; the result is a static website in `public/`, which Vercel hosts.
 
-## Automatic updates from KoBoToolbox
+## Automatic updates from Microsoft Forms (Excel on SharePoint)
 
-The dashboard updates itself — no Excel uploads needed.
+Microsoft Forms writes every response to a responses workbook in SharePoint/OneDrive.
+The dashboard reads that workbook — no manual uploads needed.
 
-1. Every 5 minutes, GitHub Actions downloads all submissions from the KoBoToolbox API
-   (`scripts/fetch_kobo.sh`, form `aeaBsrZVMuXeKozLyot5v7` on `kf.kobotoolbox.org`).
-2. If anything changed (new, edited or deleted submissions), R rebuilds the dashboard and commits `public/`.
+1. Every 5 minutes, GitHub Actions downloads the workbook through a view-only share link
+   (`scripts/fetch_excel.sh`).
+2. If the responses changed (new, edited or deleted), R rebuilds the dashboard and commits `public/`.
 3. Vercel publishes the new version; open dashboards notice it within 2 minutes and refresh themselves.
 
-Raw submissions are never committed to the repository; only the processed dashboard data is.
+Raw responses are never committed to the repository; only the processed dashboard data is.
 
 ### One-time setup
 
-| Where (GitHub → Settings → Secrets and variables → Actions) | Name | Value |
-| --- | --- | --- |
-| **Secrets** | `KOBO_TOKEN` | Your KoBo API key (KoBoToolbox → Account settings → Security → API key) |
-| Variables (optional) | `KOBO_ASSET_UID` | Only to switch forms; defaults to `aeaBsrZVMuXeKozLyot5v7` |
-| Variables (optional) | `KOBO_SERVER` | Only for another server (e.g. `https://eu.kobotoolbox.org`); defaults to `https://kf.kobotoolbox.org` |
+1. In Microsoft Forms open the form → **Responses → Open results in Excel**. This opens the
+   responses workbook that stays in sync with the form (keep it where it is; don't rename its sheet).
+2. In that workbook click **Share → Copy link**, set the link to **Anyone with the link · Can view**,
+   and copy it.
+3. On GitHub: **Settings → Secrets and variables → Actions → New repository secret**:
+   name `EXCEL_URL`, value = the link from step 2.
+4. **Actions → Build dashboard → Run workflow** once to test.
 
-Then **Actions → Build dashboard → Run workflow** once to test.
+The R reader matches the workbook's columns by question wording, so keep the question titles in
+the form as they are (adding words at the end is fine; rewording the start of a title is not).
 
-### Optional: update within a minute of each submission
+### Optional: update within a minute of each response
 
-KoBoToolbox can ping GitHub on every new submission:
+A Power Automate flow (*When a new response is submitted* → *HTTP* POST to
+`https://api.github.com/repos/Umumasayii/sylivia_habibi_dashboard/dispatches` with body
+`{"event_type": "new_response"}` and headers `Authorization: Bearer <fine-grained token with Contents: Read and write>`,
+`Accept: application/vnd.github+json`) triggers a rebuild straight away. The HTTP action needs a
+Power Automate premium licence; without it the 5-minute schedule does the job.
 
-1. On GitHub create a fine-grained personal access token for this repository only, with **Contents: Read and write**.
-2. In KoBoToolbox open the form → **Settings → REST Services → Register a new service**:
-   - Endpoint URL: `https://api.github.com/repos/Umumasayii/sylivia_habibi_dashboard/dispatches`
-   - Type: JSON
-   - Custom HTTP headers: `Authorization` = `Bearer <your token>`, `Accept` = `application/vnd.github+json`
-   - Custom wrapper around JSON submission: `{"event_type": "kobo_submission", "client_payload": {"submission": %SUBMISSION%}}`
-3. Submit a test response and check **Actions** for a run triggered by `repository_dispatch`.
+### Without the link (fallback)
 
-The 5-minute schedule keeps running either way, so nothing is missed if the ping fails.
-
-### Without the API (fallback)
-
-If `KOBO_TOKEN` is not set, the build uses the newest `.xlsx`/`.xls`/`.csv` export in `data/` instead.
+If `EXCEL_URL` is not set, the build uses the newest `.xlsx`/`.xls`/`.csv` file in `data/` instead
+(a Microsoft Forms download or an older KoBoToolbox export both work).
 
 > The repository should be **public** for a 5-minute schedule: public repositories get unlimited free Actions minutes, while private ones get 2,000 a month (enough for about a 30-minute schedule). To change the frequency, edit the `cron` line in `.github/workflows/build-dashboard.yml`.
 
@@ -71,9 +70,9 @@ The rules live in `R/01_setup.R` (`ITEMS`, `THEMES`) — edit them there and pus
 ## Project layout
 
 ```
-data/                      KoBo export (replace this)
+data/                      optional fallback data file (Forms or KoBo export)
 R/01_setup.R               item list, themes, reverse-scored items, options
-R/02_clean.R               reads any KoBo export, standardises it, scores it, flags quality issues
+R/02_clean.R               reads the Forms workbook or a KoBo export, standardises it, scores it, flags quality issues
 R/03_stats.R               reliability (bootstrap CIs), item diagnostics, group tests
 R/04_export.R              writes public/data/dashboard.js|json and respondent_scores.csv
 build_dashboard.R          entry point: Rscript build_dashboard.R

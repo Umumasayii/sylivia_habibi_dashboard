@@ -1,12 +1,13 @@
 name: Build dashboard
 
-# Pulls submissions from KoBoToolbox, rebuilds the dashboard with R when the
-# data (or the code) changed, and commits public/. Vercel then redeploys.
+# Downloads the Microsoft Forms responses workbook (Excel on SharePoint), rebuilds
+# the dashboard with R when the data (or the code) changed, and commits public/.
+# Vercel then redeploys.
 on:
   schedule:
     - cron: "*/5 * * * *"            # every 5 minutes (GitHub may delay runs by a few minutes)
   repository_dispatch:
-    types: [kobo_submission]        # optional instant trigger from KoBo (see README)
+    types: [new_response]           # optional instant trigger (e.g. Power Automate, see README)
   workflow_dispatch:                # "Run workflow" button
   push:
     branches: [main]
@@ -33,25 +34,28 @@ jobs:
     env:
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
-      KOBO_TOKEN: ${{ secrets.KOBO_TOKEN }}
-      KOBO_ASSET_UID: ${{ vars.KOBO_ASSET_UID || 'aeaBsrZVMuXeKozLyot5v7' }}
-      KOBO_SERVER: ${{ vars.KOBO_SERVER || 'https://kf.kobotoolbox.org' }}
+      EXCEL_URL: ${{ secrets.EXCEL_URL }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download submissions from KoBoToolbox
-        id: kobo
-        if: env.KOBO_TOKEN != '' && env.KOBO_ASSET_UID != ''
-        run: bash scripts/fetch_kobo.sh
+      - name: Download responses workbook from SharePoint
+        id: src
+        if: env.EXCEL_URL != ''
+        run: bash scripts/fetch_excel.sh
 
       - name: Decide whether to rebuild
         id: decide
         run: |
-          if [[ "${{ github.event_name }}" == "push" || "${{ github.event_name }}" == "workflow_dispatch" || "${{ steps.kobo.outputs.changed }}" == "true" ]]; then
+          if [[ -z "$EXCEL_URL" ]] && ! ls data/*.xlsx data/*.xls data/*.csv >/dev/null 2>&1; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Add the EXCEL_URL secret (the SharePoint share link) to build the dashboard."
+            exit 0
+          fi
+          if [[ "${{ github.event_name }}" == "push" || "${{ github.event_name }}" == "workflow_dispatch" || "${{ steps.src.outputs.changed }}" == "true" ]]; then
             echo "build=true" >> "$GITHUB_OUTPUT"
           else
             echo "build=false" >> "$GITHUB_OUTPUT"
-            echo "No new or edited submissions — nothing to rebuild."
+            echo "No new or edited responses — nothing to rebuild."
           fi
 
       - uses: r-lib/actions/setup-r@v2
@@ -65,10 +69,11 @@ jobs:
       - name: Build dashboard with R
         if: steps.decide.outputs.build == 'true'
         env:
-          KOBO_HASH: ${{ steps.kobo.outputs.hash }}
+          SOURCE_HASH: ${{ steps.src.outputs.hash }}
+          DATA_SOURCE: forms
         run: |
-          if [[ -s .kobo/submissions.json ]]; then
-            Rscript build_dashboard.R .kobo/submissions.json
+          if [[ -s .excel/responses.xlsx ]]; then
+            Rscript build_dashboard.R .excel/responses.xlsx
           else
             Rscript build_dashboard.R
           fi
@@ -83,6 +88,7 @@ jobs:
             echo "Dashboard unchanged."
             exit 0
           fi
-          git commit -m "Update dashboard: ${{ steps.kobo.outputs.n || 'file' }} submissions ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+          N="$(jq '.meta.n_all' public/data/dashboard.json 2>/dev/null || echo '?')"
+          git commit -m "Update dashboard: $N responses ($(date -u +'%Y-%m-%d %H:%M UTC'))"
           git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin HEAD:"${GITHUB_REF_NAME}"

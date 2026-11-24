@@ -31,8 +31,9 @@ export_dashboard <- function(d, st, data_file, out_dir = "public/data") {
   payload <- list(
     meta = list(title = "Knowing and Living the Self",
                 subtitle = "An anonymous survey of adults aged 18–50 in Rwanda",
-                data_file = if (tolower(tools::file_ext(data_file)) == "json") "KoBoToolbox API (live)" else basename(data_file),
-                source = if (tolower(tools::file_ext(data_file)) == "json") "kobo" else "file",
+                data_file = source_label(data_file),
+                source = if (tolower(tools::file_ext(data_file)) == "json") "kobo"
+                         else if (nzchar(Sys.getenv("DATA_SOURCE"))) Sys.getenv("DATA_SOURCE") else "file",
                 built = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
                 n_all = nrow(d), n_valid = sum(d$eligible)),
     themes = lapply(names(THEMES), function(t) list(key = t, label = THEMES[[t]],
@@ -64,4 +65,10 @@ export_dashboard <- function(d, st, data_file, out_dir = "public/data") {
                          "n_answered", "duration_min", "comments")])
   readr::write_csv(out, file.path(out_dir, "respondent_scores.csv"), na = "")
   invisible(TRUE)
+}
+
+source_label <- function(data_file) {
+  if (tolower(tools::file_ext(data_file)) == "json") return("KoBoToolbox API (live)")
+  if (identical(Sys.getenv("DATA_SOURCE"), "forms")) return("Microsoft Forms · Excel on SharePoint (live)")
+  basename(data_file)
 }

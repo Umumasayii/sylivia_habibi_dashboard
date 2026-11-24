@@ -1,6 +1,7 @@
 # -----------------------------------------------------------------------------
-# 02_clean.R — read any KoBo export and standardise it
-#   * .xlsx / .xls / .csv (comma or semicolon)
+# 02_clean.R — read the survey data and standardise it
+#   * Microsoft Forms responses workbook (Excel on SharePoint/OneDrive)
+#   * KoBo exports: .xlsx / .xls / .csv (comma or semicolon), API JSON
 #   * "Labels" or "XML values and headers", with or without group prefixes
 #   * both form versions (S1–S21 and Q6–Q26), merged per respondent
 # -----------------------------------------------------------------------------
@@ -24,7 +25,45 @@ read_any <- function(path) {
     raw <- readr::read_delim(path, delim = delim, col_types = readr::cols(.default = "c"),
                              name_repair = "minimal", show_col_types = FALSE)
   }
-  as.data.frame(raw, check.names = FALSE, stringsAsFactors = FALSE)
+  raw <- as.data.frame(raw, check.names = FALSE, stringsAsFactors = FALSE)
+  if (is_forms_export(raw)) raw <- standardise_forms(raw)
+  raw
+}
+
+# ---- Microsoft Forms responses workbook ---------------------------------------
+# Forms names each column after the question wording (no numbers) and adds
+# ID, Start time, Completion time, Email, Name, Last modified time.
+# Multiple answers are joined with ";". This renames the columns to the
+# field names used below, so everything downstream stays the same.
+is_forms_export <- function(raw) all(c("ID", "Completion time") %in% names(raw))
+
+norm_text <- function(x) gsub("[^a-z0-9]+", " ", tolower(iconv(x, to = "ASCII//TRANSLIT", sub = " ")))
+
+standardise_forms <- function(raw) {
+  key <- trimws(norm_text(names(raw)))
+  find <- function(text) {
+    t <- trimws(norm_text(text)); t <- substr(t, 1, min(nchar(t), 45))
+    which(startsWith(key, t) | grepl(paste0("^[0-9]+ ", t), key))[1]
+  }
+  map <- c(
+    `_uuid`       = which(names(raw) == "ID")[1],
+    start         = which(names(raw) == "Start time")[1],
+    end           = which(names(raw) == "Completion time")[1],
+    age_group     = find("What is your age group"),
+    lives_rwanda  = find("Do you currently live in Rwanda"),
+    consent       = find("Do you voluntarily agree to participate"),
+    activity      = find("What is your current primary activity"),
+    current_circumstances = find("Which of the following currently applies to you"),
+    comments      = find("Tell us about yourself without telling us what you")
+  )
+  for (k in 6:26) map[paste0("q", k)] <- find(STATEMENT_TEXT[k - 5])
+  miss <- names(map)[is.na(map)]
+  if (length(miss)) warning("Microsoft Forms columns not found for: ", paste(miss, collapse = ", "))
+  map <- map[!is.na(map)]
+  out <- raw[, map, drop = FALSE]; names(out) <- names(map)
+  for (v in intersect(c("activity", "current_circumstances"), names(out)))
+    out[[v]] <- gsub("\\s*;\\s*", " | ", sub(";\\s*$", "", out[[v]]))
+  out
 }
 
 # KoBoToolbox API (v2) JSON: a list of submissions, keys like "group/question"

@@ -1,7 +1,7 @@
 Package: knowinglivingself
 Title: Dashboard for the Knowing and Living the Self Survey
 Version: 1.0.0
-Description: Reads the KoBoToolbox export in data/ and builds an interactive
+Description: Reads the Microsoft Forms responses workbook (or a KoBo export) and builds an interactive
     HTML dashboard in public/. Not an installable package; this file lists
     the R packages the build needs.
 License: MIT
