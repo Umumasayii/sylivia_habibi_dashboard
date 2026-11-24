@@ -451,7 +451,7 @@
               <dt>Records</dt><dd>${K.int(K.D.meta.n_all)} submissions · ${K.int(K.D.meta.n_valid)} analysed</dd>
               <dt>Engine</dt><dd>R (cleaning, scoring, statistics) → static web app</dd>
               <dt>Downloads</dt><dd><a href="data/respondent_scores.csv" download>respondent_scores.csv</a> · <a href="data/dashboard.json" download>dashboard.json</a></dd></dl>
-              <div class="prose"><h4>Updating</h4><p>Export from KoBoToolbox (Data → Downloads → XLS), replace the file in <code>data/</code> on GitHub and commit. GitHub Actions re-runs R and Vercel publishes the new version in a few minutes.</p></div>` })}
+              <div class="prose"><h4>Updating</h4><p>Every 5 minutes GitHub Actions downloads the Microsoft Forms responses workbook from SharePoint, R rebuilds the analysis when responses changed, and Vercel publishes the new version a few minutes later.</p></div>` })}
         </div>
         <div class="grid">${K.card({ span: 12, icon: "fa-book", title: "Codebook", sub: "Full wording of the 21 statements", body: '<div id="t-codebook"></div>' })}</div>`;
 

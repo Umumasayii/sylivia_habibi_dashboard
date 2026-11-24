@@ -22,8 +22,9 @@
   ["#f-from", "#f-to"].forEach((s) => { $(s).min = K.dateMin; $(s).max = K.dateMax; });
 
   const m = K.D.meta;
-  const live = m.source === "kobo";
-  $("#sidebar-foot").innerHTML = `<div class="live-row"><span class="live-dot ${live ? "on" : ""}"></span> ${live ? "Live from KoBoToolbox" : `<i class="fa-regular fa-file-excel"></i> ${K.esc(m.data_file)}`}</div>
+  const live = m.source === "kobo" || m.source === "forms";
+  const liveName = m.source === "forms" ? "Live from Microsoft Forms" : "Live from KoBoToolbox";
+  $("#sidebar-foot").innerHTML = `<div class="live-row"><span class="live-dot ${live ? "on" : ""}"></span> ${live ? liveName : `<i class="fa-regular fa-file-excel"></i> ${K.esc(m.data_file)}`}</div>
     <div><i class="fa-regular fa-clock"></i> Updated ${new Date(m.built).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
     <div><i class="fa-solid fa-database"></i> ${K.int(m.n_all)} submissions · ${K.int(m.n_valid)} analysed</div>`;
   $("#page-foot").innerHTML = `<span>Knowing and Living the Self · anonymous survey of adults aged 18–50 in Rwanda</span>
