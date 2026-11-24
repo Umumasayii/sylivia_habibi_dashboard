@@ -16,7 +16,13 @@ if [[ "$URL" != *"download=1"* ]]; then
 fi
 
 mkdir -p .excel
-get() { curl -fsSL --retry 4 --retry-delay 5 --max-time 120 -A "Mozilla/5.0 (dashboard-bot)" "$1" -o .excel/responses.xlsx || true; }
+get() {
+  local info
+  info="$(curl -sSL --retry 4 --retry-delay 5 --max-time 120 -A "Mozilla/5.0 (dashboard-bot)" \
+          -o .excel/responses.xlsx -w '%{http_code} %{url_effective}' "$1" || true)"
+  # log the HTTP status and the host we ended up on (never the full link)
+  echo "  link host: $(printf '%s' "$1" | awk -F/ '{print $3}') · HTTP ${info%% *} · ended on: $(printf '%s' "${info#* }" | awk -F/ '{print $3}')"
+}
 is_xlsx() { [[ -s .excel/responses.xlsx && "$(head -c 2 .excel/responses.xlsx)" == "PK" ]]; }
 
 get "$URL"
